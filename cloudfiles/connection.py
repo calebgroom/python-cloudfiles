@@ -244,7 +244,7 @@ class Connection(object):
                 len(container_name) > consts.container_name_limit:
             raise InvalidContainerName(container_name)
 
-    def create_container(self, container_name, error_on_existing=False):
+    def create_container(self, container_name, metadata=None, error_on_existing=False):
         """
         Given a container name, returns a L{Container} item, creating a new
         Container if one does not already exist.
@@ -257,12 +257,18 @@ class Connection(object):
         @param error_on_existing: raise ContainerExists if container already
         exists
         @type error_on_existing: bool
+        @param metadata: Optional metadata to add to container 
+            metadata = {'x-container-meta-foo' : 'bar' }
+        @type metadata: dict
         @rtype: L{Container}
         @return: an object representing the newly created container
         """
         self._check_container_name(container_name)
 
-        response = self.make_request('PUT', [container_name])
+        if metadata:
+            response = self.make_request('PUT', [container_name], hdrs=metadata)
+        else:
+            response = self.make_request('PUT', [container_name])
         buff = response.read()
         if (response.status < 200) or (response.status > 299):
             raise ResponseError(response.status, response.reason)
